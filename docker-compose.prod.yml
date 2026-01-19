@@ -1,0 +1,37 @@
+version: '3.8'
+
+# Production overrides
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    volumes: []  # Remove dev volume mounts
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  qdrant:
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Remove dev-only services
+  firestore:
+    deploy:
+      replicas: 0  # Disable in production
