@@ -40,7 +40,16 @@ class Settings(BaseSettings):
     # LiteLLM
     litellm_primary_model: str = "gemini/gemini-1.5-flash"
     litellm_fallback_model: str = "gpt-4o-mini"
-    litellm_embedding_model: str = "text-embedding-3-small"
+
+    # Embeddings
+    # Provider: "google" (free tier, recommended) or "openai" (paid)
+    embedding_provider: Literal["google", "openai"] = "google"
+    # Fallback provider (optional) - if primary fails, try this one
+    embedding_fallback_provider: str | None = None
+    # OpenAI models: text-embedding-3-small (1536d), text-embedding-3-large (3072d)
+    openai_embedding_model: str = "text-embedding-3-small"
+    # Google models: text-embedding-004 (768d, FREE)
+    google_embedding_model: str = "text-embedding-004"
 
     # Qdrant
     qdrant_host: str = "localhost"
