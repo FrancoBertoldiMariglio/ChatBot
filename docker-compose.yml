@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Main API service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - APP_DEBUG=true
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - FIRESTORE_EMULATOR_HOST=firestore:8080
+    env_file:
+      - .env
+    depends_on:
+      - qdrant
+      - firestore
+    volumes:
+      - ./src:/app/src:ro  # Mount source for development
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+
+  # Qdrant vector database
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+
+  # Firestore emulator for development
+  firestore:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: gcloud emulators firestore start --host-port=0.0.0.0:8080
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - chatbot-network
+
+  # ngrok for exposing webhooks (development only)
+  ngrok:
+    image: ngrok/ngrok:latest
+    command: http api:8000 --log=stdout
+    ports:
+      - "4040:4040"
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN:-}
+    depends_on:
+      - api
+    profiles:
+      - dev
+    networks:
+      - chatbot-network
+
+volumes:
+  qdrant_data:
+
+networks:
+  chatbot-network:
+    driver: bridge
